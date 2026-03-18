@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="打卡">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>打卡记录</title>
+
+  <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22%E6%89%93%E5%8D%A1%E8%AE%B0%E5%BD%95%22%2C%22short_name%22%3A%22%E6%89%93%E5%8D%A1%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0a0f%22%2C%22theme_color%22%3A%22%230a0a0f%22%7D">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230a0a0f'/%3E%3Ccircle cx='90' cy='90' r='55' fill='none' stroke='%23c8ff57' stroke-width='6'/%3E%3Ccircle cx='90' cy='90' r='8' fill='%23c8ff57'/%3E%3Cline x1='90' y1='90' x2='90' y2='50' stroke='%23c8ff57' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='90' y1='90' x2='118' y2='100' stroke='%23c8ff57' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131c;
+      --surface2: #1c1c2a;
+      --accent: #c8ff57;
+      --accent2: #7b5cff;
+      --text: #f0f0f5;
+      --muted: #6b6b80;
+      --danger: #ff6b6b;
+      --border: rgba(255,255,255,0.07);
+      --r: 16px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body { height: 100%; overscroll-behavior: none; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: calc(48px + var(--safe-bottom));
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    * { position: relative; z-index: 1; }
+
+    .page { width: 100%; max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+
+    header {
+      width: 100%;
+      padding: calc(var(--safe-top) + 24px) 24px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .app-title { font-size: 12px; font-weight: 600; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; }
+
+    .streak-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .streak-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .clock-section {
+      width: 100%;
+      padding: 12px 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .live-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 52px;
+      font-weight: 400;
+      letter-spacing: -2px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .live-date { font-size: 13px; color: var(--muted); margin-top: 8px; letter-spacing: 0.06em; }
+
+    .punch-btn-wrap {
+      position: relative;
+      margin: 24px 0 28px;
+      width: 180px; height: 180px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid rgba(200,255,87,0.2);
+      animation: pulse-ring 2.8s ease-out infinite;
+    }
+    .ring:nth-child(1) { width: 180px; height: 180px; animation-delay: 0s; }
+    .ring:nth-child(2) { width: 205px; height: 205px; animation-delay: 0.9s; opacity: 0.5; }
+    .ring:nth-child(3) { width: 230px; height: 230px; animation-delay: 1.8s; opacity: 0.25; }
+
+    @keyframes pulse-ring {
+      0%   { transform: scale(0.85); opacity: 0.9; }
+      100% { transform: scale(1.1);  opacity: 0; }
+    }
+
+    .punch-btn {
+      width: 154px; height: 154px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.12s cubic-bezier(.34,1.56,.64,1);
+      position: relative; z-index: 2;
+      user-select: none;
+    }
+    .punch-btn:active { transform: scale(0.91); }
+    .punch-btn.hit { animation: hit-flash 0.55s ease forwards; }
+
+    @keyframes hit-flash {
+      0%   { transform: scale(0.91); box-shadow: 0 0 0 0 rgba(200,255,87,0.8); }
+      45%  { transform: scale(1.07); box-shadow: 0 0 0 28px rgba(200,255,87,0); }
+      100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(200,255,87,0); }
+    }
+
+    .btn-icon  { font-size: 32px; line-height: 1; }
+    .btn-label { font-size: 13px; font-weight: 700; color: #0a0a0f; letter-spacing: 0.12em; text-transform: uppercase; }
+    .btn-sub   { font-size: 10px; color: rgba(10,10,15,0.55); letter-spacing: 0.06em; }
+
+    /* Today bar */
+    .today-bar {
+      width: calc(100% - 48px);
+      margin: 0 24px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .today-punch {
+      display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1;
+    }
+    .today-punch-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .today-punch-time  { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
+    .today-punch-time.empty    { color: var(--muted); font-size: 13px; }
+    .today-punch-time.has-time { color: var(--text); }
+    .today-divider { width: 1px; height: 36px; background: var(--border); flex-shrink: 0; }
+    .today-duration {
+      display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1;
+    }
+    .today-duration-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .today-duration-value { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--accent); }
+    .today-duration-note  { font-size: 10px; color: var(--muted); }
+
+    /* Stats */
+    .stats-row {
+      width: 100%;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 12px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .stat-value { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; color: var(--text); }
+    .stat-value.accent { color: var(--accent); }
+    .stat-sub   { font-size: 10px; color: var(--muted); }
+
+    /* Avg banner */
+    .avg-banner {
+      width: calc(100% - 48px);
+      margin: 0 24px 20px;
+      background: rgba(123,92,255,0.12);
+      border: 1px solid rgba(123,92,255,0.28);
+      border-radius: var(--r);
+      padding: 16px 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .avg-banner.show { display: flex; animation: slide-in 0.4s ease; }
+    .avg-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+    .avg-value { font-family: 'DM Mono', monospace; font-size: 24px; color: var(--accent); font-weight: 500; }
+    .avg-note  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .avg-icon  { font-size: 30px; opacity: 0.5; }
+
+    /* Section head */
+    .section-head {
+      width: 100%;
+      padding: 0 24px 12px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+    .clear-btn {
+      font-size: 11px; color: var(--muted); background: none;
+      border: 1px solid transparent; cursor: pointer; padding: 4px 10px;
+      border-radius: 8px; transition: all 0.2s; font-family: 'Sora', sans-serif;
+    }
+    .clear-btn:active { color: var(--danger); border-color: rgba(255,107,107,0.3); }
+
+    /* History */
+    .history-list {
+      width: 100%;
+      padding: 0 24px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .day-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      animation: slide-in 0.3s ease;
+    }
+    .day-card.today-card { border-color: rgba(200,255,87,0.2); }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .day-label       { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+    .day-label.today { color: var(--accent); }
+
+    .day-duration-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px; font-weight: 500;
+      color: var(--accent);
+      background: rgba(200,255,87,0.1);
+      border: 1px solid rgba(200,255,87,0.2);
+      border-radius: 100px;
+      padding: 3px 12px;
+    }
+    .day-duration-pill.default {
+      color: var(--muted);
+      background: rgba(107,107,128,0.1);
+      border-color: rgba(107,107,128,0.2);
+    }
+
+    .day-body {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+    }
+    .punch-slot {
+      flex: 1;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .punch-slot.end { align-items: flex-end; }
+    .punch-slot-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .punch-slot-time  { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+    .punch-slot-time.has-time { color: var(--text); }
+    .punch-slot-time.no-time  { color: var(--muted); font-size: 13px; }
+    .punch-slot-count { font-size: 10px; color: var(--muted); }
+
+    .day-arrow { padding: 0 14px; color: var(--muted); font-size: 16px; flex-shrink: 0; }
+
+    .empty-state {
+      color: var(--muted); font-size: 14px;
+      text-align: center; padding: 40px 0; line-height: 2;
+    }
+    .empty-icon { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.4; }
+
+    .export-btn {
+      margin: 24px 24px 0;
+      width: calc(100% - 48px);
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--muted);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px; cursor: pointer;
+      letter-spacing: 0.06em; transition: all 0.2s;
+    }
+    .export-btn:active { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    .toast {
+      position: fixed;
+      bottom: calc(32px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      padding: 10px 20px;
+      border-radius: 100px;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="app-title">⏱ 打卡记录</div>
+    <div class="streak-badge">
+      <span class="streak-dot"></span>
+      <span id="streak-text">连续 0 天</span>
+    </div>
+  </header>
+
+  <div class="clock-section">
+    <div class="live-time" id="live-time">00:00:00</div>
+    <div class="live-date" id="live-date">加载中...</div>
+  </div>
+
+  <div class="punch-btn-wrap">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <button class="punch-btn" id="punch-btn" onclick="punch()">
+      <div class="btn-icon">👆</div>
+      <div class="btn-label">打　卡</div>
+      <div class="btn-sub" id="btn-sub">点击记录时间</div>
+    </button>
+  </div>
+
+  <div class="today-bar">
+    <div class="today-punch">
+      <div class="today-punch-label">上班</div>
+      <div class="today-punch-time empty" id="today-first">—</div>
+    </div>
+    <div class="today-divider"></div>
+    <div class="today-duration">
+      <div class="today-duration-label">今日时长</div>
+      <div class="today-duration-value" id="today-dur">—</div>
+      <div class="today-duration-note" id="today-dur-note">待打卡</div>
+    </div>
+    <div class="today-divider"></div>
+    <div class="today-punch">
+      <div class="today-punch-label">下班</div>
+      <div class="today-punch-time empty" id="today-last">—</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">今日次数</div>
+      <div class="stat-value accent" id="today-count">0</div>
+      <div class="stat-sub">次打卡</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">平均时长</div>
+      <div class="stat-value" id="avg-hours">—</div>
+      <div class="stat-sub">小时/天</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">已记录</div>
+      <div class="stat-value" id="total-days">0</div>
+      <div class="stat-sub">天</div>
+    </div>
+  </div>
+
+  <div class="avg-banner" id="avg-banner">
+    <div>
+      <div class="avg-label">历史平均工作时长</div>
+      <div class="avg-value" id="avg-value">—</div>
+      <div class="avg-note" id="avg-note">含不足2次按10小时计算</div>
+    </div>
+    <div class="avg-icon">📊</div>
+  </div>
+
+  <div class="section-head">
+    <div class="section-title">历史记录（按天）</div>
+    <button class="clear-btn" onclick="clearAll()">清除全部</button>
+  </div>
+
+  <div class="history-list" id="history-list">
+    <div class="empty-state">
+      <span class="empty-icon">🕐</span>
+      还没有打卡记录<br>点击上方按钮开始
+    </div>
+  </div>
+
+  <button class="export-btn" onclick="exportCSV()">导出记录为 CSV</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY  = 'punchclock_v3';
+  const DEFAULT_HOURS = 10;
+  const DEFAULT_MS    = DEFAULT_HOURS * 3600000;
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+  }
+  function save(records) { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function formatTime(ts) {
+    const d = new Date(ts);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function dateKey(ts) {
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  function todayKey() { return dateKey(Date.now()); }
+
+  function formatDateLabel(key) {
+    const [y, m, day] = key.split('-').map(Number);
+    const d = new Date(y, m - 1, day);
+    const names = ['周日','周一','周二','周三','周四','周五','周六'];
+    return `${y}-${pad(m)}-${pad(day)} ${names[d.getDay()]}`;
+  }
+
+  function formatDuration(ms) {
+    const totalMin = Math.round(ms / 60000);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  }
+
+  // Group records into day objects
+  // Each day: first punch = 上班, last punch = 下班
+  // If count < 2 → duration defaults to DEFAULT_MS
+  function getDays(records) {
+    const map = {};
+    for (const r of records) {
+      const k = dateKey(r.ts);
+      if (!map[k]) map[k] = [];
+      map[k].push(r.ts);
+    }
+    return Object.entries(map)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([key, punches]) => {
+        const sorted    = [...punches].sort((a, b) => a - b);
+        const first     = sorted[0];
+        const last      = sorted[sorted.length - 1];
+        const count     = sorted.length;
+        const isDefault = count < 2;
+        const durationMs = isDefault ? DEFAULT_MS : last - first;
+        return { key, first, last, count, durationMs, isDefault };
+      });
+  }
+
+  function calcStreak(days) {
+    if (!days.length) return 0;
+    const sorted = [...days].sort((a, b) => b.key.localeCompare(a.key));
+    let streak = 0;
+    let prev   = new Date(todayKey() + 'T00:00:00');
+    for (const d of sorted) {
+      const cur  = new Date(d.key + 'T00:00:00');
+      const diff = Math.round((prev - cur) / 86400000);
+      if (diff <= 1) { streak++; prev = cur; } else break;
+    }
+    return streak;
+  }
+
+  function updateClock() {
+    const now   = new Date();
+    const names = ['周日','周一','周二','周三','周四','周五','周六'];
+    document.getElementById('live-time').textContent =
+      `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    document.getElementById('live-date').textContent =
+      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${names[now.getDay()]}`;
+  }
+
+  function render() {
+    const records = load();
+    const days    = getDays(records);
+    const tk      = todayKey();
+    const today   = days.find(d => d.key === tk);
+
+    // Streak
+    document.getElementById('streak-text').textContent = `连续 ${calcStreak(days)} 天`;
+
+    // Today bar
+    if (today) {
+      const fe = document.getElementById('today-first');
+      const le = document.getElementById('today-last');
+
+      fe.textContent = formatTime(today.first);
+      fe.className   = 'today-punch-time has-time';
+
+      if (today.count >= 2) {
+        le.textContent = formatTime(today.last);
+        le.className   = 'today-punch-time has-time';
+        document.getElementById('today-dur').textContent      = formatDuration(today.durationMs);
+        document.getElementById('today-dur-note').textContent = '实际时长';
+      } else {
+        le.textContent = '待打卡';
+        le.className   = 'today-punch-time empty';
+        document.getElementById('today-dur').textContent      = `${DEFAULT_HOURS}h`;
+        document.getElementById('today-dur-note').textContent = `默认值（不足2次）`;
+      }
+      document.getElementById('today-count').textContent = today.count;
+      document.getElementById('btn-sub').textContent     = `今日第 ${today.count + 1} 次`;
+    } else {
+      ['today-first','today-last'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = '—';
+        el.className   = 'today-punch-time empty';
+      });
+      document.getElementById('today-dur').textContent      = '—';
+      document.getElementById('today-dur-note').textContent = '待打卡';
+      document.getElementById('today-count').textContent    = 0;
+      document.getElementById('btn-sub').textContent        = '点击记录时间';
+    }
+
+    // Stats
+    const totalDays = days.length;
+    document.getElementById('total-days').textContent = totalDays;
+
+    if (totalDays > 0) {
+      const avgMs = days.reduce((s, d) => s + d.durationMs, 0) / totalDays;
+      document.getElementById('avg-hours').textContent = (avgMs / 3600000).toFixed(1);
+      document.getElementById('avg-value').textContent = formatDuration(avgMs);
+      const defCount = days.filter(d => d.isDefault).length;
+      document.getElementById('avg-note').textContent =
+        defCount > 0
+          ? `共 ${totalDays} 天，其中 ${defCount} 天按默认 ${DEFAULT_HOURS}h 计算`
+          : `共 ${totalDays} 天，均为实际打卡数据`;
+      document.getElementById('avg-banner').classList.add('show');
+    } else {
+      document.getElementById('avg-hours').textContent = '—';
+      document.getElementById('avg-banner').classList.remove('show');
+    }
+
+    // History
+    const list = document.getElementById('history-list');
+    if (!days.length) {
+      list.innerHTML = `<div class="empty-state"><span class="empty-icon">🕐</span>还没有打卡记录<br>点击上方按钮开始</div>`;
+      return;
+    }
+
+    list.innerHTML = days.map(d => {
+      const isToday    = d.key === tk;
+      const pillClass  = d.isDefault ? 'day-duration-pill default' : 'day-duration-pill';
+      const pillText   = d.isDefault ? `${DEFAULT_HOURS}h 默认` : formatDuration(d.durationMs);
+      const lastTime   = d.count >= 2 ? formatTime(d.last) : '待打卡';
+      const lastClass  = d.count >= 2 ? 'has-time' : 'no-time';
+      return `
+        <div class="day-card ${isToday ? 'today-card' : ''}">
+          <div class="day-header">
+            <div class="day-label ${isToday ? 'today' : ''}">${isToday ? '今天 · ' : ''}${formatDateLabel(d.key)}</div>
+            <div class="${pillClass}">${pillText}</div>
+          </div>
+          <div class="day-body">
+            <div class="punch-slot">
+              <div class="punch-slot-label">上班</div>
+              <div class="punch-slot-time has-time">${formatTime(d.first)}</div>
+              <div class="punch-slot-count">第 1 次打卡</div>
+            </div>
+            <div class="day-arrow">→</div>
+            <div class="punch-slot end">
+              <div class="punch-slot-label">下班</div>
+              <div class="punch-slot-time ${lastClass}">${lastTime}</div>
+              <div class="punch-slot-count">共 ${d.count} 次打卡</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function punch() {
+    const records = load();
+    records.push({ ts: Date.now() });
+    save(records);
+
+    const btn = document.getElementById('punch-btn');
+    btn.classList.remove('hit');
+    void btn.offsetWidth;
+    btn.classList.add('hit');
+    if (navigator.vibrate) navigator.vibrate(12);
+
+    render();
+
+    const days  = getDays(records);
+    const today = days.find(d => d.key === todayKey());
+    if (today && today.count >= 2) {
+      showToast(`打卡成功 · 今日时长 ${formatDuration(today.durationMs)}`);
+    } else {
+      showToast(`打卡成功 ✓ 今日第 ${today ? today.count : 1} 次`);
+    }
+  }
+
+  function clearAll() {
+    if (!load().length) { showToast('暂无记录'); return; }
+    if (confirm('确定清除所有打卡记录？此操作无法撤销。')) {
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+      showToast('已清除所有记录');
+    }
+  }
+
+  function exportCSV() {
+    const records = load();
+    if (!records.length) { showToast('暂无记录可导出'); return; }
+    const days = getDays(records).reverse();
+    const rows = ['日期,星期,上班时间,下班时间,打卡次数,工作时长(小时),是否默认值'];
+    for (const d of days) {
+      const [y, m, day] = d.key.split('-').map(Number);
+      const wd    = new Date(y, m - 1, day);
+      const names = ['周日','周一','周二','周三','周四','周五','周六'];
+      const last  = d.count >= 2 ? formatTime(d.last) : '';
+      const hours = (d.durationMs / 3600000).toFixed(2);
+      rows.push(`${d.key},${names[wd.getDay()]},${formatTime(d.first)},${last},${d.count},${hours},${d.isDefault ? '是' : '否'}`);
+    }
+    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `打卡记录_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('导出成功');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock();
+  render();
+
+  if ('serviceWorker' in navigator) {
+    const sw = `const C='pc-v3';self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['/'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/'))));});`;
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+  }
+</script>
+</body>
+</html>
