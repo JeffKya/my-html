@@ -8,345 +8,209 @@
   <meta name="apple-mobile-web-app-title" content="打卡">
   <meta name="theme-color" content="#0a0a0f">
   <title>打卡记录</title>
-
   <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22%E6%89%93%E5%8D%A1%E8%AE%B0%E5%BD%95%22%2C%22short_name%22%3A%22%E6%89%93%E5%8D%A1%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0a0f%22%2C%22theme_color%22%3A%22%230a0a0f%22%7D">
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230a0a0f'/%3E%3Ccircle cx='90' cy='90' r='55' fill='none' stroke='%23c8ff57' stroke-width='6'/%3E%3Ccircle cx='90' cy='90' r='8' fill='%23c8ff57'/%3E%3Cline x1='90' y1='90' x2='90' y2='50' stroke='%23c8ff57' stroke-width='5' stroke-linecap='round'/%3E%3Cline x1='90' y1='90' x2='118' y2='100' stroke='%23c8ff57' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;600;700&display=swap" rel="stylesheet">
-
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
     :root {
-      --bg: #0a0a0f;
-      --surface: #13131c;
-      --surface2: #1c1c2a;
-      --accent: #c8ff57;
-      --accent2: #7b5cff;
-      --text: #f0f0f5;
-      --muted: #6b6b80;
-      --danger: #ff6b6b;
-      --border: rgba(255,255,255,0.07);
-      --r: 16px;
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --bg: #0a0a0f; --surface: #13131c; --surface2: #1c1c2a;
+      --accent: #c8ff57; --accent2: #7b5cff;
+      --text: #f0f0f5; --muted: #6b6b80; --danger: #ff6b6b;
+      --border: rgba(255,255,255,0.07); --r: 16px;
+      --safe-top: env(safe-area-inset-top,0px);
+      --safe-bottom: env(safe-area-inset-bottom,0px);
     }
-
     html, body { height: 100%; overscroll-behavior: none; }
-
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg); color: var(--text);
       font-family: 'Sora', sans-serif;
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-bottom: calc(48px + var(--safe-bottom));
-      overflow-x: hidden;
+      min-height: 100vh; min-height: -webkit-fill-available;
+      display: flex; flex-direction: column; align-items: center;
+      padding-bottom: calc(48px + var(--safe-bottom)); overflow-x: hidden;
     }
-
     body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.4;
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.4;
     }
-
     * { position: relative; z-index: 1; }
-
     .page { width: 100%; max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
 
-    header {
-      width: 100%;
-      padding: calc(var(--safe-top) + 24px) 24px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-
+    /* ── Header ── */
+    header { width: 100%; padding: calc(var(--safe-top) + 24px) 24px 12px; display: flex; justify-content: space-between; align-items: flex-end; }
     .app-title { font-size: 12px; font-weight: 600; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; }
-
-    .streak-badge {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 5px 14px;
-      font-size: 12px;
-      font-family: 'DM Mono', monospace;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .streak-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--accent);
-      animation: blink 2s ease-in-out infinite;
-    }
+    .streak-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; padding: 5px 14px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+    .streak-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 2s ease-in-out infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    .clock-section {
-      width: 100%;
-      padding: 12px 24px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .live-time {
-      font-family: 'DM Mono', monospace;
-      font-size: 52px;
-      font-weight: 400;
-      letter-spacing: -2px;
-      color: var(--text);
-      line-height: 1;
-    }
+    /* ── Clock ── */
+    .clock-section { width: 100%; padding: 12px 24px 20px; display: flex; flex-direction: column; align-items: center; }
+    .live-time { font-family: 'DM Mono', monospace; font-size: 52px; font-weight: 400; letter-spacing: -2px; color: var(--text); line-height: 1; }
     .live-date { font-size: 13px; color: var(--muted); margin-top: 8px; letter-spacing: 0.06em; }
 
-    .punch-btn-wrap {
-      position: relative;
-      margin: 24px 0 28px;
-      width: 180px; height: 180px;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    .ring {
-      position: absolute;
-      border-radius: 50%;
-      border: 1.5px solid rgba(200,255,87,0.2);
-      animation: pulse-ring 2.8s ease-out infinite;
-    }
+    /* ── Punch Button ── */
+    .punch-btn-wrap { position: relative; margin: 24px 0 28px; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; }
+    .ring { position: absolute; border-radius: 50%; border: 1.5px solid rgba(200,255,87,0.2); animation: pulse-ring 2.8s ease-out infinite; }
     .ring:nth-child(1) { width: 180px; height: 180px; animation-delay: 0s; }
     .ring:nth-child(2) { width: 205px; height: 205px; animation-delay: 0.9s; opacity: 0.5; }
     .ring:nth-child(3) { width: 230px; height: 230px; animation-delay: 1.8s; opacity: 0.25; }
-
-    @keyframes pulse-ring {
-      0%   { transform: scale(0.85); opacity: 0.9; }
-      100% { transform: scale(1.1);  opacity: 0; }
-    }
-
-    .punch-btn {
-      width: 154px; height: 154px;
-      border-radius: 50%;
-      border: none;
-      background: var(--accent);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: transform 0.12s cubic-bezier(.34,1.56,.64,1);
-      position: relative; z-index: 2;
-      user-select: none;
-    }
+    @keyframes pulse-ring { 0%{transform:scale(0.85);opacity:0.9} 100%{transform:scale(1.1);opacity:0} }
+    .punch-btn { width: 154px; height: 154px; border-radius: 50%; border: none; background: var(--accent); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; transition: transform 0.12s cubic-bezier(.34,1.56,.64,1); position: relative; z-index: 2; user-select: none; }
     .punch-btn:active { transform: scale(0.91); }
     .punch-btn.hit { animation: hit-flash 0.55s ease forwards; }
-
-    @keyframes hit-flash {
-      0%   { transform: scale(0.91); box-shadow: 0 0 0 0 rgba(200,255,87,0.8); }
-      45%  { transform: scale(1.07); box-shadow: 0 0 0 28px rgba(200,255,87,0); }
-      100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(200,255,87,0); }
-    }
-
-    .btn-icon  { font-size: 32px; line-height: 1; }
+    @keyframes hit-flash { 0%{transform:scale(0.91);box-shadow:0 0 0 0 rgba(200,255,87,0.8)} 45%{transform:scale(1.07);box-shadow:0 0 0 28px rgba(200,255,87,0)} 100%{transform:scale(1);box-shadow:0 0 0 0 rgba(200,255,87,0)} }
+    .btn-icon { font-size: 32px; line-height: 1; }
     .btn-label { font-size: 13px; font-weight: 700; color: #0a0a0f; letter-spacing: 0.12em; text-transform: uppercase; }
-    .btn-sub   { font-size: 10px; color: rgba(10,10,15,0.55); letter-spacing: 0.06em; }
+    .btn-sub { font-size: 10px; color: rgba(10,10,15,0.55); letter-spacing: 0.06em; }
 
-    /* Today bar */
-    .today-bar {
-      width: calc(100% - 48px);
-      margin: 0 24px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .today-punch {
-      display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1;
-    }
+    /* ── Today Bar ── */
+    .today-bar { width: calc(100% - 48px); margin: 0 24px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .today-punch { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
     .today-punch-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
-    .today-punch-time  { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
-    .today-punch-time.empty    { color: var(--muted); font-size: 13px; }
+    .today-punch-time { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
+    .today-punch-time.empty { color: var(--muted); font-size: 13px; }
     .today-punch-time.has-time { color: var(--text); }
     .today-divider { width: 1px; height: 36px; background: var(--border); flex-shrink: 0; }
-    .today-duration {
-      display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1;
-    }
+    .today-duration { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
     .today-duration-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
     .today-duration-value { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--accent); }
-    .today-duration-note  { font-size: 10px; color: var(--muted); }
+    .today-duration-note { font-size: 10px; color: var(--muted); }
 
-    /* Stats */
-    .stats-row {
-      width: 100%;
-      padding: 0 24px;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 14px 12px;
-      display: flex; flex-direction: column; gap: 4px;
-    }
+    /* ── Stats ── */
+    .stats-row { width: 100%; padding: 0 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; }
     .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
     .stat-value { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; color: var(--text); }
     .stat-value.accent { color: var(--accent); }
-    .stat-sub   { font-size: 10px; color: var(--muted); }
+    .stat-sub { font-size: 10px; color: var(--muted); }
 
-    /* Avg banner */
-    .avg-banner {
-      width: calc(100% - 48px);
-      margin: 0 24px 20px;
-      background: rgba(123,92,255,0.12);
-      border: 1px solid rgba(123,92,255,0.28);
-      border-radius: var(--r);
-      padding: 16px 20px;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-    }
+    /* ── Avg Banner ── */
+    .avg-banner { width: calc(100% - 48px); margin: 0 24px 20px; background: rgba(123,92,255,0.12); border: 1px solid rgba(123,92,255,0.28); border-radius: var(--r); padding: 16px 20px; display: none; align-items: center; justify-content: space-between; }
     .avg-banner.show { display: flex; animation: slide-in 0.4s ease; }
     .avg-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
     .avg-value { font-family: 'DM Mono', monospace; font-size: 24px; color: var(--accent); font-weight: 500; }
-    .avg-note  { font-size: 11px; color: var(--muted); margin-top: 3px; }
-    .avg-icon  { font-size: 30px; opacity: 0.5; }
+    .avg-note { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .avg-icon { font-size: 30px; opacity: 0.5; }
 
-    /* Section head */
-    .section-head {
-      width: 100%;
-      padding: 0 24px 12px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
+    /* ── Section Head ── */
+    .section-head { width: 100%; padding: 0 24px 12px; display: flex; justify-content: space-between; align-items: center; }
     .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
-    .clear-btn {
-      font-size: 11px; color: var(--muted); background: none;
-      border: 1px solid transparent; cursor: pointer; padding: 4px 10px;
-      border-radius: 8px; transition: all 0.2s; font-family: 'Sora', sans-serif;
-    }
+    .clear-btn { font-size: 11px; color: var(--muted); background: none; border: 1px solid transparent; cursor: pointer; padding: 4px 10px; border-radius: 8px; transition: all 0.2s; font-family: 'Sora', sans-serif; }
     .clear-btn:active { color: var(--danger); border-color: rgba(255,107,107,0.3); }
 
-    /* History */
-    .history-list {
-      width: 100%;
-      padding: 0 24px;
-      display: flex; flex-direction: column; gap: 8px;
-    }
+    /* ── History ── */
+    .history-list { width: 100%; padding: 0 24px; display: flex; flex-direction: column; gap: 8px; }
+    @keyframes slide-in { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
 
-    .day-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      overflow: hidden;
-      animation: slide-in 0.3s ease;
-    }
+    .day-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; animation: slide-in 0.3s ease; }
     .day-card.today-card { border-color: rgba(200,255,87,0.2); }
 
-    @keyframes slide-in {
-      from { opacity: 0; transform: translateY(-8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .day-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px 10px;
-      border-bottom: 1px solid var(--border);
-    }
-    .day-label       { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+    .day-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 10px; border-bottom: 1px solid var(--border); gap: 8px; }
+    .day-label { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; flex: 1; }
     .day-label.today { color: var(--accent); }
+    .day-duration-pill { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--accent); background: rgba(200,255,87,0.1); border: 1px solid rgba(200,255,87,0.2); border-radius: 100px; padding: 3px 11px; white-space: nowrap; }
+    .day-duration-pill.default { color: var(--muted); background: rgba(107,107,128,0.1); border-color: rgba(107,107,128,0.2); }
 
-    .day-duration-pill {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px; font-weight: 500;
-      color: var(--accent);
-      background: rgba(200,255,87,0.1);
-      border: 1px solid rgba(200,255,87,0.2);
-      border-radius: 100px;
-      padding: 3px 12px;
-    }
-    .day-duration-pill.default {
-      color: var(--muted);
-      background: rgba(107,107,128,0.1);
-      border-color: rgba(107,107,128,0.2);
-    }
+    /* header action buttons */
+    .day-actions { display: flex; gap: 6px; align-items: center; }
+    .day-action-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 13px; width: 30px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+    .day-action-btn:active { transform: scale(0.9); }
+    .day-action-btn.edit-btn:active { color: var(--accent); border-color: rgba(200,255,87,0.4); }
+    .day-action-btn.del-btn:active  { color: var(--danger); border-color: rgba(255,107,107,0.4); }
 
-    .day-body {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-    }
-    .punch-slot {
-      flex: 1;
-      display: flex; flex-direction: column; gap: 3px;
-    }
+    .day-body { display: flex; align-items: center; padding: 12px 16px; }
+    .punch-slot { flex: 1; display: flex; flex-direction: column; gap: 3px; }
     .punch-slot.end { align-items: flex-end; }
     .punch-slot-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
-    .punch-slot-time  { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+    .punch-slot-time { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
     .punch-slot-time.has-time { color: var(--text); }
     .punch-slot-time.no-time  { color: var(--muted); font-size: 13px; }
     .punch-slot-count { font-size: 10px; color: var(--muted); }
-
     .day-arrow { padding: 0 14px; color: var(--muted); font-size: 16px; flex-shrink: 0; }
 
-    .empty-state {
-      color: var(--muted); font-size: 14px;
-      text-align: center; padding: 40px 0; line-height: 2;
-    }
-    .empty-icon { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state { color: var(--muted); font-size: 14px; text-align: center; padding: 40px 0; line-height: 2; }
+    .empty-icon  { font-size: 36px; display: block; margin-bottom: 12px; opacity: 0.4; }
 
-    .export-btn {
-      margin: 24px 24px 0;
-      width: calc(100% - 48px);
-      padding: 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      color: var(--muted);
-      font-family: 'Sora', sans-serif;
-      font-size: 13px; cursor: pointer;
-      letter-spacing: 0.06em; transition: all 0.2s;
-    }
+    .export-btn { margin: 24px 24px 0; width: calc(100% - 48px); padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); color: var(--muted); font-family: 'Sora', sans-serif; font-size: 13px; cursor: pointer; letter-spacing: 0.06em; transition: all 0.2s; }
     .export-btn:active { color: var(--text); border-color: rgba(255,255,255,0.2); }
 
-    .toast {
-      position: fixed;
-      bottom: calc(32px + var(--safe-bottom));
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: calc(32px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-size: 13px; padding: 10px 20px; border-radius: 100px; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal-sheet {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      padding: 0 0 calc(28px + var(--safe-bottom));
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+    .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+    .modal-title  { font-size: 14px; font-weight: 600; color: var(--text); text-align: center; padding: 16px 24px 4px; }
+    .modal-date   { font-size: 12px; color: var(--muted); text-align: center; font-family: 'DM Mono', monospace; padding-bottom: 20px; }
+
+    .modal-fields { display: flex; flex-direction: column; gap: 12px; padding: 0 24px 20px; }
+    .modal-field  { display: flex; flex-direction: column; gap: 6px; }
+    .modal-field-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+    .modal-input {
       background: var(--surface2);
       border: 1px solid var(--border);
+      border-radius: 12px;
       color: var(--text);
-      font-size: 13px;
-      padding: 10px 20px;
-      border-radius: 100px;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 999;
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      font-weight: 500;
+      padding: 12px 16px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+      text-align: center;
+      letter-spacing: 2px;
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .modal-input:focus { border-color: rgba(200,255,87,0.5); }
+    /* native time picker color on iOS */
+    .modal-input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; }
+
+    .modal-btns { display: flex; gap: 10px; padding: 4px 24px 0; }
+    .modal-btn {
+      flex: 1; padding: 14px; border-radius: 12px; font-family: 'Sora', sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer; border: none;
+      transition: all 0.15s; letter-spacing: 0.04em;
+    }
+    .modal-btn.cancel { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    .modal-btn.save   { background: var(--accent); color: #0a0a0f; }
+    .modal-btn.save:active  { transform: scale(0.97); }
+    .modal-btn.cancel:active { transform: scale(0.97); }
+
+    .modal-delete-section { padding: 20px 24px 0; border-top: 1px solid var(--border); margin-top: 8px; }
+    .modal-delete-btn { width: 100%; padding: 13px; border-radius: 12px; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.25); color: var(--danger); font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s; }
+    .modal-delete-btn:active { background: rgba(255,107,107,0.2); transform: scale(0.97); }
   </style>
 </head>
 <body>
 <div class="page">
-
   <header>
     <div class="app-title">⏱ 打卡记录</div>
     <div class="streak-badge">
@@ -361,9 +225,7 @@
   </div>
 
   <div class="punch-btn-wrap">
-    <div class="ring"></div>
-    <div class="ring"></div>
-    <div class="ring"></div>
+    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
     <button class="punch-btn" id="punch-btn" onclick="punch()">
       <div class="btn-icon">👆</div>
       <div class="btn-label">打　卡</div>
@@ -431,19 +293,48 @@
   <button class="export-btn" onclick="exportCSV()">导出记录为 CSV</button>
 </div>
 
+<!-- Edit / Delete Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">编辑打卡时间</div>
+    <div class="modal-date" id="modal-date-label">—</div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <div class="modal-field-label">🟢 上班时间（第一次打卡）</div>
+        <input type="time" class="modal-input" id="edit-first">
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">🔴 下班时间（最后一次打卡）</div>
+        <input type="time" class="modal-input" id="edit-last">
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;padding-left:4px">不填则视为不足2次，按默认10小时计算</div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn save"   onclick="saveEdit()">保存</button>
+    </div>
+    <div class="modal-delete-section">
+      <button class="modal-delete-btn" onclick="deleteDay()">🗑 删除这一天的记录</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  const STORAGE_KEY  = 'punchclock_v3';
+  const STORAGE_KEY   = 'punchclock_v3';
   const DEFAULT_HOURS = 10;
   const DEFAULT_MS    = DEFAULT_HOURS * 3600000;
 
-  function load() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-  }
-  function save(records) { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+  let editingKey = null; // date key currently in modal
 
-  function pad(n) { return String(n).padStart(2, '0'); }
+  /* ── Storage ── */
+  function load() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
+  function save(r) { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); }
+
+  /* ── Helpers ── */
+  function pad(n) { return String(n).padStart(2,'0'); }
 
   function formatTime(ts) {
     const d = new Date(ts);
@@ -458,22 +349,18 @@
   function todayKey() { return dateKey(Date.now()); }
 
   function formatDateLabel(key) {
-    const [y, m, day] = key.split('-').map(Number);
-    const d = new Date(y, m - 1, day);
+    const [y,m,day] = key.split('-').map(Number);
     const names = ['周日','周一','周二','周三','周四','周五','周六'];
-    return `${y}-${pad(m)}-${pad(day)} ${names[d.getDay()]}`;
+    return `${y}-${pad(m)}-${pad(day)} ${names[new Date(y,m-1,day).getDay()]}`;
   }
 
   function formatDuration(ms) {
-    const totalMin = Math.round(ms / 60000);
-    const h = Math.floor(totalMin / 60);
-    const m = totalMin % 60;
-    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+    const t = Math.round(ms/60000);
+    const h = Math.floor(t/60), m = t%60;
+    return m===0 ? `${h}h` : `${h}h ${m}m`;
   }
 
-  // Group records into day objects
-  // Each day: first punch = 上班, last punch = 下班
-  // If count < 2 → duration defaults to DEFAULT_MS
+  /* Build day objects from raw records */
   function getDays(records) {
     const map = {};
     for (const r of records) {
@@ -482,11 +369,11 @@
       map[k].push(r.ts);
     }
     return Object.entries(map)
-      .sort((a, b) => b[0].localeCompare(a[0]))
+      .sort((a,b) => b[0].localeCompare(a[0]))
       .map(([key, punches]) => {
-        const sorted    = [...punches].sort((a, b) => a - b);
+        const sorted    = [...punches].sort((a,b)=>a-b);
         const first     = sorted[0];
-        const last      = sorted[sorted.length - 1];
+        const last      = sorted[sorted.length-1];
         const count     = sorted.length;
         const isDefault = count < 2;
         const durationMs = isDefault ? DEFAULT_MS : last - first;
@@ -496,105 +383,94 @@
 
   function calcStreak(days) {
     if (!days.length) return 0;
-    const sorted = [...days].sort((a, b) => b.key.localeCompare(a.key));
-    let streak = 0;
-    let prev   = new Date(todayKey() + 'T00:00:00');
+    const sorted = [...days].sort((a,b)=>b.key.localeCompare(a.key));
+    let streak=0, prev=new Date(todayKey()+'T00:00:00');
     for (const d of sorted) {
-      const cur  = new Date(d.key + 'T00:00:00');
-      const diff = Math.round((prev - cur) / 86400000);
-      if (diff <= 1) { streak++; prev = cur; } else break;
+      const cur  = new Date(d.key+'T00:00:00');
+      const diff = Math.round((prev-cur)/86400000);
+      if (diff<=1){streak++;prev=cur;} else break;
     }
     return streak;
   }
 
+  /* ── Clock ── */
   function updateClock() {
-    const now   = new Date();
-    const names = ['周日','周一','周二','周三','周四','周五','周六'];
-    document.getElementById('live-time').textContent =
-      `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    document.getElementById('live-date').textContent =
-      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${names[now.getDay()]}`;
+    const now=new Date(), names=['周日','周一','周二','周三','周四','周五','周六'];
+    document.getElementById('live-time').textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    document.getElementById('live-date').textContent=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${names[now.getDay()]}`;
   }
 
+  /* ── Render ── */
   function render() {
     const records = load();
     const days    = getDays(records);
     const tk      = todayKey();
-    const today   = days.find(d => d.key === tk);
+    const today   = days.find(d=>d.key===tk);
 
-    // Streak
     document.getElementById('streak-text').textContent = `连续 ${calcStreak(days)} 天`;
 
     // Today bar
     if (today) {
-      const fe = document.getElementById('today-first');
-      const le = document.getElementById('today-last');
-
-      fe.textContent = formatTime(today.first);
-      fe.className   = 'today-punch-time has-time';
-
-      if (today.count >= 2) {
-        le.textContent = formatTime(today.last);
-        le.className   = 'today-punch-time has-time';
-        document.getElementById('today-dur').textContent      = formatDuration(today.durationMs);
-        document.getElementById('today-dur-note').textContent = '实际时长';
+      const fe=document.getElementById('today-first'), le=document.getElementById('today-last');
+      fe.textContent=formatTime(today.first); fe.className='today-punch-time has-time';
+      if (today.count>=2) {
+        le.textContent=formatTime(today.last); le.className='today-punch-time has-time';
+        document.getElementById('today-dur').textContent=formatDuration(today.durationMs);
+        document.getElementById('today-dur-note').textContent='实际时长';
       } else {
-        le.textContent = '待打卡';
-        le.className   = 'today-punch-time empty';
-        document.getElementById('today-dur').textContent      = `${DEFAULT_HOURS}h`;
-        document.getElementById('today-dur-note').textContent = `默认值（不足2次）`;
+        le.textContent='待打卡'; le.className='today-punch-time empty';
+        document.getElementById('today-dur').textContent=`${DEFAULT_HOURS}h`;
+        document.getElementById('today-dur-note').textContent='默认值（不足2次）';
       }
-      document.getElementById('today-count').textContent = today.count;
-      document.getElementById('btn-sub').textContent     = `今日第 ${today.count + 1} 次`;
+      document.getElementById('today-count').textContent=today.count;
+      document.getElementById('btn-sub').textContent=`今日第 ${today.count+1} 次`;
     } else {
-      ['today-first','today-last'].forEach(id => {
-        const el = document.getElementById(id);
-        el.textContent = '—';
-        el.className   = 'today-punch-time empty';
-      });
-      document.getElementById('today-dur').textContent      = '—';
-      document.getElementById('today-dur-note').textContent = '待打卡';
-      document.getElementById('today-count').textContent    = 0;
-      document.getElementById('btn-sub').textContent        = '点击记录时间';
+      ['today-first','today-last'].forEach(id=>{const el=document.getElementById(id);el.textContent='—';el.className='today-punch-time empty';});
+      document.getElementById('today-dur').textContent='—';
+      document.getElementById('today-dur-note').textContent='待打卡';
+      document.getElementById('today-count').textContent=0;
+      document.getElementById('btn-sub').textContent='点击记录时间';
     }
 
     // Stats
-    const totalDays = days.length;
-    document.getElementById('total-days').textContent = totalDays;
-
-    if (totalDays > 0) {
-      const avgMs = days.reduce((s, d) => s + d.durationMs, 0) / totalDays;
-      document.getElementById('avg-hours').textContent = (avgMs / 3600000).toFixed(1);
-      document.getElementById('avg-value').textContent = formatDuration(avgMs);
-      const defCount = days.filter(d => d.isDefault).length;
-      document.getElementById('avg-note').textContent =
-        defCount > 0
-          ? `共 ${totalDays} 天，其中 ${defCount} 天按默认 ${DEFAULT_HOURS}h 计算`
-          : `共 ${totalDays} 天，均为实际打卡数据`;
+    const totalDays=days.length;
+    document.getElementById('total-days').textContent=totalDays;
+    if (totalDays>0) {
+      const avgMs=days.reduce((s,d)=>s+d.durationMs,0)/totalDays;
+      document.getElementById('avg-hours').textContent=(avgMs/3600000).toFixed(1);
+      document.getElementById('avg-value').textContent=formatDuration(avgMs);
+      const def=days.filter(d=>d.isDefault).length;
+      document.getElementById('avg-note').textContent=def>0
+        ?`共 ${totalDays} 天，其中 ${def} 天按默认 ${DEFAULT_HOURS}h 计算`
+        :`共 ${totalDays} 天，均为实际打卡数据`;
       document.getElementById('avg-banner').classList.add('show');
     } else {
-      document.getElementById('avg-hours').textContent = '—';
+      document.getElementById('avg-hours').textContent='—';
       document.getElementById('avg-banner').classList.remove('show');
     }
 
-    // History
-    const list = document.getElementById('history-list');
+    // History list
+    const list=document.getElementById('history-list');
     if (!days.length) {
-      list.innerHTML = `<div class="empty-state"><span class="empty-icon">🕐</span>还没有打卡记录<br>点击上方按钮开始</div>`;
+      list.innerHTML=`<div class="empty-state"><span class="empty-icon">🕐</span>还没有打卡记录<br>点击上方按钮开始</div>`;
       return;
     }
 
-    list.innerHTML = days.map(d => {
-      const isToday    = d.key === tk;
-      const pillClass  = d.isDefault ? 'day-duration-pill default' : 'day-duration-pill';
-      const pillText   = d.isDefault ? `${DEFAULT_HOURS}h 默认` : formatDuration(d.durationMs);
-      const lastTime   = d.count >= 2 ? formatTime(d.last) : '待打卡';
-      const lastClass  = d.count >= 2 ? 'has-time' : 'no-time';
+    list.innerHTML=days.map(d=>{
+      const isToday=d.key===tk;
+      const pillClass=d.isDefault?'day-duration-pill default':'day-duration-pill';
+      const pillText=d.isDefault?`${DEFAULT_HOURS}h 默认`:formatDuration(d.durationMs);
+      const lastTime=d.count>=2?formatTime(d.last):'待打卡';
+      const lastClass=d.count>=2?'has-time':'no-time';
       return `
-        <div class="day-card ${isToday ? 'today-card' : ''}">
+        <div class="day-card ${isToday?'today-card':''}">
           <div class="day-header">
-            <div class="day-label ${isToday ? 'today' : ''}">${isToday ? '今天 · ' : ''}${formatDateLabel(d.key)}</div>
+            <div class="day-label ${isToday?'today':''}">${isToday?'今天 · ':''}${formatDateLabel(d.key)}</div>
             <div class="${pillClass}">${pillText}</div>
+            <div class="day-actions">
+              <button class="day-action-btn edit-btn" onclick="openEdit('${d.key}')" title="编辑">✎</button>
+              <button class="day-action-btn del-btn"  onclick="openEditForDelete('${d.key}')" title="删除">⋯</button>
+            </div>
           </div>
           <div class="day-body">
             <div class="punch-slot">
@@ -613,28 +489,91 @@
     }).join('');
   }
 
+  /* ── Punch ── */
   function punch() {
-    const records = load();
-    records.push({ ts: Date.now() });
+    const records=load();
+    records.push({ts:Date.now()});
     save(records);
-
-    const btn = document.getElementById('punch-btn');
-    btn.classList.remove('hit');
-    void btn.offsetWidth;
-    btn.classList.add('hit');
+    const btn=document.getElementById('punch-btn');
+    btn.classList.remove('hit'); void btn.offsetWidth; btn.classList.add('hit');
     if (navigator.vibrate) navigator.vibrate(12);
-
     render();
-
-    const days  = getDays(records);
-    const today = days.find(d => d.key === todayKey());
-    if (today && today.count >= 2) {
-      showToast(`打卡成功 · 今日时长 ${formatDuration(today.durationMs)}`);
-    } else {
-      showToast(`打卡成功 ✓ 今日第 ${today ? today.count : 1} 次`);
-    }
+    const days=getDays(records), today=days.find(d=>d.key===todayKey());
+    showToast(today&&today.count>=2
+      ?`打卡成功 · 今日时长 ${formatDuration(today.durationMs)}`
+      :`打卡成功 ✓ 今日第 ${today?today.count:1} 次`);
   }
 
+  /* ── Modal ── */
+  function openEdit(key) {
+    editingKey = key;
+    const records = load();
+    const days    = getDays(records);
+    const day     = days.find(d=>d.key===key);
+    if (!day) return;
+
+    document.getElementById('modal-date-label').textContent = formatDateLabel(key);
+    document.getElementById('edit-first').value = formatTime(day.first);
+    document.getElementById('edit-last').value  = day.count>=2 ? formatTime(day.last) : '';
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function openEditForDelete(key) {
+    // Open the modal — user can choose to delete from there
+    openEdit(key);
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    editingKey = null;
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  function saveEdit() {
+    if (!editingKey) return;
+    const firstVal = document.getElementById('edit-first').value; // "HH:MM"
+    const lastVal  = document.getElementById('edit-last').value;
+
+    if (!firstVal) { showToast('请填写上班时间'); return; }
+
+    // Parse HH:MM into a timestamp anchored to the editing day
+    function toTS(dateKey, timeStr) {
+      const [y,m,d] = dateKey.split('-').map(Number);
+      const [hh,mm] = timeStr.split(':').map(Number);
+      return new Date(y, m-1, d, hh, mm, 0).getTime();
+    }
+
+    const firstTS = toTS(editingKey, firstVal);
+    if (lastVal && toTS(editingKey, lastVal) <= firstTS) {
+      showToast('下班时间必须晚于上班时间'); return;
+    }
+
+    // Remove all records for this day, then re-insert first (and optionally last)
+    let records = load().filter(r => dateKey(r.ts) !== editingKey);
+    records.push({ ts: firstTS });
+    if (lastVal) records.push({ ts: toTS(editingKey, lastVal) });
+
+    save(records);
+    closeModal();
+    render();
+    showToast('已更新打卡记录 ✓');
+  }
+
+  function deleteDay() {
+    if (!editingKey) return;
+    const label = formatDateLabel(editingKey);
+    if (!confirm(`确定删除「${label}」的所有打卡记录吗？`)) return;
+    let records = load().filter(r => dateKey(r.ts) !== editingKey);
+    save(records);
+    closeModal();
+    render();
+    showToast('已删除该日记录');
+  }
+
+  /* ── Clear All ── */
   function clearAll() {
     if (!load().length) { showToast('暂无记录'); return; }
     if (confirm('确定清除所有打卡记录？此操作无法撤销。')) {
@@ -644,43 +583,40 @@
     }
   }
 
+  /* ── Export ── */
   function exportCSV() {
-    const records = load();
-    if (!records.length) { showToast('暂无记录可导出'); return; }
-    const days = getDays(records).reverse();
-    const rows = ['日期,星期,上班时间,下班时间,打卡次数,工作时长(小时),是否默认值'];
-    for (const d of days) {
-      const [y, m, day] = d.key.split('-').map(Number);
-      const wd    = new Date(y, m - 1, day);
-      const names = ['周日','周一','周二','周三','周四','周五','周六'];
-      const last  = d.count >= 2 ? formatTime(d.last) : '';
-      const hours = (d.durationMs / 3600000).toFixed(2);
-      rows.push(`${d.key},${names[wd.getDay()]},${formatTime(d.first)},${last},${d.count},${hours},${d.isDefault ? '是' : '否'}`);
+    const records=load();
+    if (!records.length){showToast('暂无记录可导出');return;}
+    const days=getDays(records).reverse();
+    const rows=['日期,星期,上班时间,下班时间,打卡次数,工作时长(小时),是否默认值'];
+    for (const d of days){
+      const [y,m,day]=d.key.split('-').map(Number);
+      const names=['周日','周一','周二','周三','周四','周五','周六'];
+      const wd=new Date(y,m-1,day);
+      rows.push(`${d.key},${names[wd.getDay()]},${formatTime(d.first)},${d.count>=2?formatTime(d.last):''},${d.count},${(d.durationMs/3600000).toFixed(2)},${d.isDefault?'是':'否'}`);
     }
-    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = `打卡记录_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`打卡记录_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
     showToast('导出成功');
   }
 
+  /* ── Toast ── */
   function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+    t._timer=setTimeout(()=>t.classList.remove('show'),2500);
   }
 
-  setInterval(updateClock, 1000);
+  setInterval(updateClock,1000);
   updateClock();
   render();
 
   if ('serviceWorker' in navigator) {
-    const sw = `const C='pc-v3';self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['/'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/'))));});`;
+    const sw=`const C='pc-v4';self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['/'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/'))));});`;
     navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
   }
 </script>
